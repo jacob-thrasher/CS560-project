@@ -1,0 +1,67 @@
+{
+  "columns": [
+    
+    "NACCID",
+    "NACCALZD",
+    "NACCALZP",
+    "NACCFDYS",
+    "NACCDAYS",
+    "NACCUDSD",
+    "NACCMCII",
+    "CDRGLOB",
+    "CDRSUM",
+    "NACCMMSE",
+    "NACCGDS",
+
+    "NACCADC",
+    "VISITMO",
+    "VISITDAY",
+    "VISITYR",
+    "NACCVNUM",
+    "FORMVER",
+    "NACCACTV",
+    "NACCNOVS",
+
+    "NACCAGE",
+    "SEX",
+    "RACE",
+    "EDUC",
+    "NACCFAM",
+    "OTHMUT",
+    "OTHMUTX",
+    "NACCADMU",
+
+    "APA",
+    "AGIT",
+
+    "HYPERTEN",
+    "DIABETES",
+    "STROKE",
+    "CVD",
+    "CVDIF",
+    "NACCBMI",
+
+    "REY1REC",
+    "REY2REC",
+    "REY3REC",
+    "REY4REC",
+    "REY5REC",
+    "REY6REC",
+
+    "REY1INT",
+    "REY2INT",
+    "REY3INT",
+    "REY4INT",
+    "REY5INT",
+    "REY6INT",
+
+    "REYDREC",
+    "REYTCOR",
+    "REYFPOS",
+
+    "S",
+    "MONTHS_FROM_BASELINE",
+    "TIME_TO_EVENT"
+
+  ]
+}
