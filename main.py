@@ -132,3 +132,6 @@ for epoch in tqdm(range(cfg['train_params']['epochs'])):
     plt.savefig(os.path.join(out_dir, 'C.png'))
     plt.close()
 
+model.eval()
+_, C = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps)
+print(C)

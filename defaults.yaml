@@ -7,7 +7,7 @@ exp_details:
   exist_ok: 1
   dataset: NACC
 train_params:
-  epochs: 50
+  epochs: 1
   checkpoint: 100
   batch_size: 128
   loss_fn: 'DeepHit'
