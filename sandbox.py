@@ -2,6 +2,8 @@ import numpy as np
 from utils.survival_utils import concordance_impurity
 from lifelines.utils import concordance_index
 import random
+from data import NACCDataset
+import pandas as pd
 
 
 
@@ -51,42 +53,47 @@ def half_case(n=20, seed=0):
     return times.tolist(), events.tolist(), predictions.tolist()
 
 
-times, events, predictions = perfect_case()
-C = concordance_index(times, predictions, events)
+# times, events, predictions = perfect_case()
+# C = concordance_index(times, predictions, events)
 
-groups = []
-for i in range(20):
-    r = random.random()
-    if r < .5: groups.append('male')
-    else: groups.append('female')
+# groups = []
+# for i in range(20):
+#     r = random.random()
+#     if r < .5: groups.append('male')
+#     else: groups.append('female')
 
-CI, counter = concordance_impurity(predictions, times, events, groups)
-print(CI)
+# CI, counter = concordance_impurity(predictions, times, events, groups)
+# print(CI)
 
-times, events, predictions = zero_case()
-groups = []
-for i in range(20):
-    r = random.random()
-    if r < .5: groups.append('male')
-    else: groups.append('female')
+# times, events, predictions = zero_case()
+# groups = []
+# for i in range(20):
+#     r = random.random()
+#     if r < .5: groups.append('male')
+#     else: groups.append('female')
 
-CI, counter = concordance_impurity(predictions, times, events, groups)
-print(CI)
+# CI, counter = concordance_impurity(predictions, times, events, groups)
+# print(CI)
+
+# # C = concordance_index(times, predictions, events)
+# # print(C)
+
+# times, events, predictions = half_case()
+# groups = []
+# for i in range(20):
+#     r = random.random()
+#     if r < .5: groups.append('male')
+#     else: groups.append('female')
+
+# CI, counter = concordance_impurity(predictions, times, events, groups)
+# print(CI)
+
 
 # C = concordance_index(times, predictions, events)
 # print(C)
 
-times, events, predictions = half_case()
-groups = []
-for i in range(20):
-    r = random.random()
-    if r < .5: groups.append('male')
-    else: groups.append('female')
-
-CI, counter = concordance_impurity(predictions, times, events, groups)
-print(CI)
 
 
-# C = concordance_index(times, predictions, events)
-# print(C)
-
+dataset = NACCDataset('data/train.csv')
+X, t, e, _ = dataset[0]
+print(len(X))

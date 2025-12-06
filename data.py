@@ -57,7 +57,7 @@ def randomCrop(img, length, width, height):
 
 
 
-def load_dataset(root, dataset, n_bins=10):
+def load_dataset(root, dataset, n_bins=10, time_mode='discrete'):
     '''
     Loads and converts desired dataset to a survival dataset
 
@@ -70,8 +70,13 @@ def load_dataset(root, dataset, n_bins=10):
         n_bins - Desired number of bins to discretize continuous data (Default: 10)
     '''
 
-
-    if dataset in ['METABRIC', 'SUPPORT', 'GBSG', 'FLCHAIN']:
+    if dataset == 'NACC':
+        train_surv = NACCDataset(os.path.join(root, 'train.csv'), time_mode=time_mode, name='NACC')
+        valid_surv = NACCDataset(os.path.join(root, 'valid.csv'), time_mode=time_mode, name='NACC')
+        test_surv = NACCDataset(os.path.join(root, 'test.csv')  , time_mode=time_mode, name='NACC')
+        time_steps = np.arange(0, n_bins, 1)
+ 
+    elif dataset in ['METABRIC', 'SUPPORT', 'GBSG', 'FLCHAIN']:
         if dataset == 'METABRIC': 
             df = metabric.read_df()
             cols_standardize = ['x0', 'x1', 'x2', 'x3', 'x8']
@@ -142,20 +147,37 @@ class PyCoxDataset(Dataset):
         return X, t, e, -1
 
 class NACCDataset(Dataset):
-    def __init__(self, df_path, cols_standardize=None):
+    def __init__(self, df_path, time_mode='discrete', name="NACC"):
+
+        assert time_mode in ['discrete', 'continuous'], f'Expected parameter time_mode to be one of [discrete, continuous], got {time_mode}'
 
         self.df = pd.read_csv(df_path)
-        if cols_standardize is None:
-            cols_standardize = ['NACCAGE', 'EDUC', 'CDRSUM', 'SMOKRYS', 'NACCBMI', 'NACCMMSE', 'NACCMOCA']
-        cols_leave = self.df.columns.tolist().remove(cols_standardize)
-        standardize = [([col], StandardScaler()) for col in cols_standardize]
-        leave = [(col, None) for col in cols_leave]
-        x_mapper = DataFrameMapper(standardize + leave)
+        self.time_mode = time_mode
+        self.race_cols = [c for c in self.df.columns if "RACE" in c]
+        self.name = name
 
-        return
     
     def __len__(self):
-        return
+        return len(self.df)
     
-    def __getitem__(self):
-        return
+    def __getitem__(self, idx):
+        row = self.df.iloc[idx]
+
+        x = row.drop(['NACCID', 'EVENT', 'TIME_TO_EVENT', 'TIME_TO_EVENT_DISCRETE']).tolist()
+        e = row['EVENT']
+        if self.time_mode == 'discrete':
+            t = row['TIME_TO_EVENT_DISCRETE']
+        elif self.time_mode == 'continuous':
+            t = row['TIME_TO_EVENT']
+        
+        # Get subject profile
+        race = row[self.race_cols]
+        race = race[race == 1].index[0] 
+
+        profile = {
+            'NACCID': row['NACCID'],
+            'SEX': int(row['SEX']),
+            'RACE': race
+        }
+
+        return torch.tensor(x, dtype=torch.float32), t, e, profile
