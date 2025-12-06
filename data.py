@@ -77,7 +77,7 @@ def load_dataset(root, dataset, n_bins=10, time_mode='discrete'):
         time_steps = np.arange(0, n_bins, 1)
  
     elif dataset in ['METABRIC', 'SUPPORT', 'GBSG', 'FLCHAIN']:
-        if dataset == 'METABRIC': 
+        if dataset == 'METABRIC': # 9
             df = metabric.read_df()
             cols_standardize = ['x0', 'x1', 'x2', 'x3', 'x8']
             cols_leave = ['x4', 'x5', 'x6', 'x7']
@@ -173,10 +173,12 @@ class NACCDataset(Dataset):
         # Get subject profile
         race = row[self.race_cols]
         race = race[race == 1].index[0] 
+        
 
+        sex = 'male' if int(row['SEX']) == 0 else 'female'
         profile = {
             'NACCID': row['NACCID'],
-            'SEX': int(row['SEX']),
+            'SEX': sex,
             'RACE': race
         }
 

@@ -37,7 +37,9 @@ def get_survival_curves(pred, method='DeepHit'):
 def _is_comparable(t_i, t_j, e_i, e_j):
     return ((t_i < t_j) & e_i) | ((t_i == t_j) & (e_i | e_j))
 
-def concordance_impurity(predictions, times, events, group, group_names=['male', 'female']):
+def concordance_impurity(predictions, times, events, group, group_names=['male', 'female'], concordance='hazard'):
+
+    assert concordance in ['hazard', 'td'], f'Expected parameter concordance to be one of [hazard, td], got {concordance}'
 
     counter = {}
     for g in group_names:
@@ -50,7 +52,12 @@ def concordance_impurity(predictions, times, events, group, group_names=['male',
             t_i, t_j = times[i], times[j]
             e_i, e_j = events[i], events[j]
             g_i, g_j = group[i], group[j]
-            r_i, r_j = predictions[i], predictions[j]
+
+            if concordance == 'hazard':
+                r_i, r_j = predictions[i], predictions[j]
+            elif concordance == 'td':
+                # Invert survival probabilities to align with hazard
+                r_i, r_j = 1 - predictions[i][t_i], 1 - predictions[j][t_i]
 
             # Ensure i and j are comparable
             if not _is_comparable(t_i, t_j, e_i, e_j): continue
@@ -61,18 +68,18 @@ def concordance_impurity(predictions, times, events, group, group_names=['male',
                 if r_i > r_j: counter[g_i]['num_concordant'] += 1
                 elif r_i == r_j: counter[g_i]['num_concordant'] += 0.5
             elif t_i > t_j:
-                if r_i < r_j: counter[g_i] += 1
-                elif r_i == r_j: counter[g_i] += 0.5
+                if r_i < r_j: counter[g_i]['num_concordant'] += 1
+                elif r_i == r_j: counter[g_i]['num_concordant'] += 0.5
             elif t_i == t_j:
                 if e_i == 1 and e_j == 1:
-                    if r_i == r_j: counter[g_i] += 1
-                    else: counter[g_i] += 0.5
+                    if r_i == r_j: counter[g_i]['num_concordant'] += 1
+                    else: counter[g_i]['num_concordant'] += 0.5
                 elif e_i == 0 and e_j == 1 and r_i < r_j:
-                    counter[g_i] += 1
+                    counter[g_i]['num_concordant'] += 1
                 elif e_i == 1 and e_j == 0 and r_i > r_j:
-                    counter[g_i] += 1
+                    counter[g_i]['num_concordant'] += 1
                 else:
-                    counter[g_i] += 0.5
+                    counter[g_i]['num_concordant'] += 0.5
 
     # Calculate concordance fraction (CF)
     for g in group_names:
@@ -89,6 +96,7 @@ def concordance_impurity(predictions, times, events, group, group_names=['male',
     
     impurity_score = max(deviations)
     return impurity_score, counter
+
 
 def get_metrics(predictions, time_range, times, events, method='DeepHit'):
     survival_curves = get_survival_curves(predictions, method=method)
