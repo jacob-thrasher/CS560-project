@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import numba
+from tqdm import tqdm
 from torch import nn
 from scipy.interpolate import interp1d
 from pycox.evaluation import EvalSurv
@@ -35,23 +36,27 @@ def get_survival_curves(pred, method='DeepHit'):
 
 @numba.jit(nopython=True)
 def _is_comparable(t_i, t_j, e_i, e_j):
-    return ((t_i < t_j) & e_i) | ((t_i == t_j) & (e_i | e_j))
+    return ((t_i < t_j) & e_i) | ((t_i == t_j) & e_i & e_j == 0)
 
-def concordance_impurity(predictions, times, events, group, group_names=['male', 'female'], concordance='hazard'):
+def concordance_impurity(predictions, times, events, group, concordance='hazard'):
 
     assert concordance in ['hazard', 'td'], f'Expected parameter concordance to be one of [hazard, td], got {concordance}'
+
+    group_names = list(set(group))
 
     counter = {}
     for g in group_names:
         counter[g] = {'num_comparable': 0, 'num_concordant': 0}
 
-    for i in range(len(predictions)):
+    for i in tqdm(range(len(predictions)), desc='Computing impurity'):
         for j in range(len(predictions)):
-            if i == j: continue
 
             t_i, t_j = times[i], times[j]
             e_i, e_j = events[i], events[j]
             g_i, g_j = group[i], group[j]
+
+            if i == j: continue
+            if g_i == 'unknown' or g_j == 'unknown': continue
 
             if concordance == 'hazard':
                 r_i, r_j = predictions[i], predictions[j]
@@ -83,6 +88,7 @@ def concordance_impurity(predictions, times, events, group, group_names=['male',
 
     # Calculate concordance fraction (CF)
     for g in group_names:
+        if g == 'unknown': continue
         counter[g]['concordance_fraction'] = counter[g]['num_concordant'] / counter[g]['num_comparable']
 
     # Calculate CF devations between groups
@@ -90,6 +96,7 @@ def concordance_impurity(predictions, times, events, group, group_names=['male',
     for g_i in group_names:
         for g_j in group_names:
             if g_i == g_j: continue
+            if g_i == 'unknown' or g_j == 'unknown': continue
 
             dev = abs(counter[g_i]['concordance_fraction'] - counter[g_j]['concordance_fraction'])
             deviations.append(dev)
@@ -98,7 +105,23 @@ def concordance_impurity(predictions, times, events, group, group_names=['male',
     return impurity_score, counter
 
 
-def get_metrics(predictions, time_range, times, events, method='DeepHit'):
+def get_metrics(predictions, time_range, times, events, method='DeepHit', sens_attribute=None, groups=None):
     survival_curves = get_survival_curves(predictions, method=method)
     ev = EvalSurv(pd.DataFrame(survival_curves.T, time_range), np.array(times), np.array(events), censor_surv='km')
-    return ev.concordance_td('antolini')
+    impurity = -1
+    counts = {}
+    ibs = float(ev.integrated_brier_score(time_range))
+
+    if sens_attribute: 
+        assert groups is not None, 'Parameter groups cannot be None when sens_attribute is defined!'
+        impurity, counts = concordance_impurity(predictions, times, events, groups, concordance='td')
+    
+    
+    results = {
+        'C': ev.concordance_td('antolini'),
+        'IBS': ibs,
+        f'Impurity_{sens_attribute}': impurity,
+        f'CI_counts_{sens_attribute}': counts
+    }
+    
+    return results

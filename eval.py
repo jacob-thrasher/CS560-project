@@ -23,12 +23,12 @@ if __name__ == '__main__':
 
 
     
-    exp_path = '/home/WVU-AD/jdt0025/Documents/exp/METABRIC_DeepHit_Adam0.0001'
+    exp_path = 'figures/NACC_DeepHit_Adam0.0001'
     cfg = load_config(os.path.join(exp_path, 'config.yaml'))
 
     set_seed(cfg['seed'])
 
-    batch_size = 32
+    batch_size = 128
 
     
 
@@ -59,10 +59,21 @@ if __name__ == '__main__':
     model.eval()
     model.to(device)
 
+    _, results2 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race')
+    _, results = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='sex')
 
-    _, C = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps)
-    print(C)
+    print(results)
+    results['Impurity_race'] = results2['Impurity_race']
+    results['CI_counts_race'] = results2['CI_counts_race']
+    with open(os.path.join(exp_path, 'results.yaml'), 'w') as f:
+        yaml.dump(results, f)
 
+    print('C  :', results['C'])
+    print('IBS:', results['IBS'])
+    print('\nCI (sex):', results['Impurity_sex'])
+    print('Details:\n', results['CI_counts_sex'])
+    print('\nCI (race):', results2['Impurity_race'])
+    print('Details:\n', results2['CI_counts_race'])
 
     
 

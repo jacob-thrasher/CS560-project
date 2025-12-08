@@ -28,7 +28,7 @@ optim = cfg['optimizer']['optim']
 lr = cfg['optimizer']['lr']
 paradigm = cfg['train_params']['loss_fn']
 
-exp_id = f'{dataset}_{paradigm}_{optim}{lr}'
+exp_id = f'{dataset}_{paradigm}_{optim}{lr}_{cfg["seed"]}'
 out_dir = os.path.join(cfg['exp_details']['out_dir'], exp_id)
 if os.path.exists(out_dir):
     if not cfg['exp_details']['exist_ok']: raise OSError("Experiment exists!")
@@ -73,6 +73,15 @@ else: raise NotImplementedError(f'Optimizer {optimizer} not implemented')
 paradigm = cfg['train_params']['loss_fn']
 if paradigm == 'NLL': loss_fn = NLLLoss(reduction=cfg['train_params']['reduction'], device=device)
 elif paradigm == 'DeepHit': loss_fn = DeepHitLoss(weight=cfg['train_params']['lambda'], device=device)
+elif paradigm == 'MTLR'   : loss_fn = NLLMTLRLoss(device=device)
+elif paradigm == 'RPS'    : loss_fn = RPSLoss(device=device)
+elif paradigm == 'RPS_Ranking': 
+    rps = RPSLoss(device=device)
+    ranking = RankingLoss(device=device)
+    loss_fn = RegularizedLoss(loss_fn=rps, reg_fn=ranking, weight=1)
+    method = 'RPS'
+elif paradigm == 'Ranking':
+    loss_fn = RankingLoss(device=device)
 
 
 # Train
@@ -84,7 +93,10 @@ best_loss = 1e10
 for epoch in tqdm(range(cfg['train_params']['epochs'])):
 
     train_loss = train_step(model, train_dataloader, optim, loss_fn, device)
-    valid_loss, C = test_step(model, valid_dataloader, loss_fn, device, time_step=time_steps, method=paradigm)
+    valid_loss, results = test_step(model, valid_dataloader, loss_fn, device, time_step=time_steps, method=paradigm)
+
+    C = results['C']
+    IBS = results['IBS']
 
     if np.isnan(train_loss): 
         with open(os.path.join(out_dir, 'error.txt'), 'w') as f:
@@ -132,6 +144,28 @@ for epoch in tqdm(range(cfg['train_params']['epochs'])):
     plt.savefig(os.path.join(out_dir, 'C.png'))
     plt.close()
 
-model.eval()
-_, C = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps)
-print(C)
+    plt.figure(figsize=(10, 7))
+    plt.plot(Cs, label=f'ISB ({train_surv_ID.name})', color='orange')
+    plt.title('IBS over time')
+    plt.grid(False)
+    plt.legend()
+    plt.savefig(os.path.join(out_dir, 'ibs.png'))
+    plt.close()
+
+model.eval()   
+_, results2 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race')
+_, results = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='sex')
+
+print(results)
+results['Impurity_race'] = results2['Impurity_race']
+with open(os.path.join(out_dir, 'results.yaml'), 'w') as f:
+    yaml.dump(results, f)
+
+print('C  :', results['C'])
+print('IBS:', results['IBS'])
+print('\nCI (sex):', results['Impurity_sex'])
+print('Details:\n', results['CI_counts_sex'])
+print('\nCI (race):', results2['Impurity_race'])
+print('Details:\n', results2['CI_counts_race'])
+
+    

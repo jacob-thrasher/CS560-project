@@ -15,8 +15,21 @@ def load_pretrained_model(model_path, out_dim, cfg, device='cuda'):
 
     return model
 
+class LayerBlock(nn.Module):
+    def __init__(self, in_features, out_features, dropout=0.1):
+        super().__init__()
+
+        self.layers = nn.Sequential([
+            nn.Linear(in_features, out_features),
+            nn.ReLU(),
+            nn.Dropout(0.1)
+        ])
+
+    def forward(self, x):
+        return self.layers(x)
+
 class Network(nn.Module):
-    def __init__(self, out_features, in_dim=-1, hid_dim=32, return_emb=True, backbone='resnet18'):
+    def __init__(self, out_features, in_dim=-1, hid_dim=32, return_emb=True, backbone='resnet18', linear_dimensions=[]):
         super().__init__()
 
         if backbone == 'resnet18':
@@ -33,6 +46,11 @@ class Network(nn.Module):
             self.head = nn.Linear(768, out_features)
         elif backbone == 'mlp':
             if in_dim < 0: raise ValueError(f'Parameter in_dim should be greater than 0 when backbone=mlp')
+            # layers = [LayerBlock(in_dim, linear_dimensions[0])]
+            # for i in range(len(linear_dimensions) - 1):
+            #     layers.append(LayerBlock(linear_dimensions[i], linear_dimensions[i+1]))
+            # self.backbone = nn.Sequential()
+
             self.backbone = nn.Sequential(nn.Linear(in_dim, hid_dim),
                                           nn.ReLU(),
                                           nn.BatchNorm1d(hid_dim),

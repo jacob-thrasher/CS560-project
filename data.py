@@ -172,14 +172,25 @@ class NACCDataset(Dataset):
         
         # Get subject profile
         race = row[self.race_cols]
-        race = race[race == 1].index[0] 
-        
+        race = race[race == 1]
+        if len(race) == 0: race = 'unknown'
+        else: 
+            race = race.index[0] 
+            if   race == 'RACE_1.0': race = 'white'
+            elif race == 'RACE_2.0': race = 'black'
+            elif race == 'RACE_3.0': race = 'native_american'
+            elif race == 'RACE_4.0': race = 'pacific_islander'
+            elif race == 'RACE_5.0': race = 'asian'
+            elif race == 'RACE_50.0': race = 'other'
+            elif race == 'RACE_Missing': race = 'unknown'
+            else: raise ValueError(f"Unknown race for subject {row['NACCID']}. Got {race}") 
+            
 
         sex = 'male' if int(row['SEX']) == 0 else 'female'
         profile = {
-            'NACCID': row['NACCID'],
-            'SEX': sex,
-            'RACE': race
+            'naccid': row['NACCID'],
+            'sex': sex,
+            'race': race
         }
 
         return torch.tensor(x, dtype=torch.float32), t, e, profile

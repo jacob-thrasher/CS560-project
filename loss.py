@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch import Tensor
+from utils.survival_utils import cumsum_reverse, get_survival_curves
 
 
 def _reduction(loss: Tensor, reduction: str = 'mean') -> Tensor:
@@ -13,6 +14,20 @@ def _reduction(loss: Tensor, reduction: str = 'mean') -> Tensor:
             return loss.sum()
         raise ValueError(f"`reduction` = {reduction} is not valid. Use 'none', 'mean' or 'sum'.")
 
+class RegularizedLoss(nn.Module):
+    def __init__(self, loss_fn, reg_fn, weight=0.5):
+        super(RegularizedLoss, self).__init__()
+
+        self.loss_fn = loss_fn
+        self.reg_fn = reg_fn
+        self.weight = weight
+
+    def forward(self, h, t, e, proj_1=None, proj_2=None):
+        a = self.loss_fn(h, t, e)
+        if self.weight == 0: return a # For efficiency
+        b = self.reg_fn(h, t, e)
+            
+        return a + self.weight * b
 
 class NLLLoss(nn.Module):
     """
@@ -208,3 +223,67 @@ class DeepHitLoss(nn.Module):
     def forward(self, h, t, e):
         return self.nll(h, t, e) + self.weight * self.ranking(h, t, e)
     
+class NLLMTLRLoss(NLLLoss):
+    def __init__(self, reduction='mean', device='cuda'):
+        super(NLLMTLRLoss, self).__init__()
+        self.reduction = reduction
+        self.device = device
+    
+    def forward(self, phi: Tensor, idx_durations: Tensor, events: Tensor) -> Tensor:
+        """
+        Adapted from: https://github.com/havakv/pycox/blob/master/pycox/models/loss.py
+        Negative log-likelihood for the MTLR parametrized model [1] [2].
+
+        This is essentially a PMF parametrization with an extra cumulative sum, as explained in [3].
+        
+        Arguments:
+            phi {torch.tensor} -- Estimates in (-inf, inf), where pmf = somefunc(phi).
+            idx_durations {torch.tensor} -- Event times represented as indices.
+            events {torch.tensor} -- Indicator of event (1.) or censoring (0.).
+                Same length as 'idx_durations'.
+            reduction {string} -- How to reduce the loss.
+                'none': No reduction.
+                'mean': Mean of tensor.
+                'sum: sum.
+        
+        Returns:
+            torch.tensor -- The negative log-likelihood.
+        """
+        phi = cumsum_reverse(phi, dim=1)
+        return self.nll_pmf(phi, idx_durations, events, self.reduction)
+
+
+
+class RPSLoss(nn.Module):
+    '''
+    From: Estimating Calibrated Individualized Survival Curves with Deep Learning (AAAI2021)
+
+    Implementation different from above. Vectorized for efficiency.
+    '''
+    def __init__(self, device='cuda'):
+        super(RPSLoss, self).__init__()
+
+        self.device = device
+
+
+    def forward(self, out, t, e):
+        '''
+        Impelement brier loss
+        Incorporate normalization, censored individuals, and potential reweighting due to time to event skew
+        '''
+
+        s_pred = get_survival_curves(out, method='RPS')
+        s_pred = s_pred.to(self.device)
+
+        # Create mask for i < t (up to observed event time, exclusive)
+        mask = (torch.arange(s_pred.size(1), device=self.device).unsqueeze(0) < t.unsqueeze(1)).int()
+        uncensored = torch.sum(e.view(-1, 1) * (s_pred - mask) ** 2)
+
+        # Create mask for i <= t (up to, and including, time of censorship)
+        mask = (torch.arange(s_pred.size(1), device=self.device).unsqueeze(0) < t.unsqueeze(1)).int()
+        censored = torch.sum((1 - e).view(-1, 1) * mask*(s_pred - 1) ** 2)
+
+        return uncensored + censored
+
+
+

@@ -27,16 +27,19 @@ def train_step(model, dataloader, optim, loss_fn, device='cuda'):
 
   return running_loss / len(dataloader)
 
-def test_step(model, dataloader, loss_fn, device, time_step=None, method='DeepHit'):
+def test_step(model, dataloader, loss_fn, device, time_step=None, method='DeepHit', sens_attribute=None):
     model.eval()
 
     running_loss = 0
     times = []
     events = []
     predictions = []
-    for X, t, e, _ in dataloader:
+    groups = []
+    for X, t, e, profile in dataloader:
         times += t.tolist()
         events += [bool(x) for x in e]
+        if sens_attribute:
+          groups += profile[sens_attribute.lower()]
 
         X = X.to(device)
         e = e.to(device)
@@ -50,7 +53,7 @@ def test_step(model, dataloader, loss_fn, device, time_step=None, method='DeepHi
 
         predictions += h.cpu().tolist()
 
-    C = get_metrics(torch.tensor(predictions), time_step, times, events, method=method)
-    return running_loss / len(dataloader), C
+    results = get_metrics(torch.tensor(predictions), time_step, times, events, method=method, sens_attribute=sens_attribute, groups=groups)
+    return running_loss / len(dataloader), results
 
 
