@@ -71,7 +71,9 @@ else: raise NotImplementedError(f'Optimizer {optimizer} not implemented')
 
 # Configure loss
 paradigm = cfg['train_params']['loss_fn']
-if paradigm == 'NLL': loss_fn = NLLLoss(reduction=cfg['train_params']['reduction'], device=device)
+if paradigm == 'NLL': 
+    loss_fn = NLLLoss(reduction=cfg['train_params']['reduction'], device=device)
+    paradigm = 'PMF'
 elif paradigm == 'DeepHit': loss_fn = DeepHitLoss(weight=cfg['train_params']['lambda'], device=device)
 elif paradigm == 'MTLR'   : loss_fn = NLLMTLRLoss(device=device)
 elif paradigm == 'RPS'    : loss_fn = RPSLoss(device=device)
@@ -79,9 +81,10 @@ elif paradigm == 'RPS_Ranking':
     rps = RPSLoss(device=device)
     ranking = RankingLoss(device=device)
     loss_fn = RegularizedLoss(loss_fn=rps, reg_fn=ranking, weight=1)
-    method = 'RPS'
+    paradigm = 'RPS'
 elif paradigm == 'Ranking':
     loss_fn = RankingLoss(device=device)
+    paradigm == 'PMF'
 
 
 # Train
@@ -158,6 +161,7 @@ _, results = test_step(model, test_dataloader, loss_fn=None, device=device, time
 
 print(results)
 results['Impurity_race'] = results2['Impurity_race']
+results['CI_counts_race'] = results2['CI_counts_race']
 with open(os.path.join(out_dir, 'results.yaml'), 'w') as f:
     yaml.dump(results, f)
 

@@ -38,6 +38,9 @@ def get_survival_curves(pred, method='DeepHit'):
 def _is_comparable(t_i, t_j, e_i, e_j):
     return ((t_i < t_j) & e_i) | ((t_i == t_j) & e_i & e_j == 0)
 
+def _not_comparable(t_i, t_j, e_i, e_j):
+    return (t_i < t_j & e_i == 0) | (t_j < t_i & e_j == 0) | (t_i == t_j & e_i == 0 & e_j == 0)
+
 def concordance_impurity(predictions, times, events, group, concordance='hazard'):
 
     assert concordance in ['hazard', 'td'], f'Expected parameter concordance to be one of [hazard, td], got {concordance}'
@@ -66,6 +69,7 @@ def concordance_impurity(predictions, times, events, group, concordance='hazard'
 
             # Ensure i and j are comparable
             if not _is_comparable(t_i, t_j, e_i, e_j): continue
+            # if _not_comparable(t_i, t_j, e_i, e_j): continue
             counter[g_i]['num_comparable'] += 1
 
             # Evaluate concordance

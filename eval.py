@@ -22,59 +22,62 @@ from network import load_pretrained_model
 if __name__ == '__main__':
 
 
-    
-    exp_path = 'figures/NACC_DeepHit_Adam0.0001'
-    cfg = load_config(os.path.join(exp_path, 'config.yaml'))
+    exp_root = '/home/WVU-AD/jdt0025/Documents/exp/CS560'
+    folders = sorted(os.listdir(exp_root))
+    for i, exp in enumerate(folders):
+        print(f'\n[{i} / {len(folders)}]: Evaluating model {exp}...\n')
+        exp_path = os.path.join(exp_root, exp)
+        # exp_path = 'figures/NACC_DeepHit_Adam0.0001'
+        cfg = load_config(os.path.join(exp_path, 'config.yaml'))
 
-    set_seed(cfg['seed'])
+        set_seed(cfg['seed'])
 
-    batch_size = 128
+        batch_size = 128
 
-    
-
-
-
-
-    ########################
-    # Load data
-    root = cfg['exp_details']['data_root']
-    train_surv, valid_surv, test_surv, time_steps = load_dataset(root, cfg['exp_details']['dataset'])
-
-
-    train_dataloader  = DataLoader(train_surv, batch_size=batch_size, shuffle=True, drop_last=True)
-    test_dataloader   = DataLoader(test_surv, batch_size=batch_size, shuffle=False)
-
-    # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device = cfg['primary_device']
-    print(f'\nUsing {device} device\n')
+        
 
 
 
-    if 'train_params' in cfg.keys(): method = cfg['train_params']['loss_fn']
-    else: method = cfg['paradigm']
 
-    model = load_pretrained_model(os.path.join(exp_path, 'best_model_C.pt'), 
-                                            out_dim=len(time_steps),
-                                            cfg=cfg)
-    model.eval()
-    model.to(device)
+        ########################
+        # Load data
+        root = cfg['exp_details']['data_root']
+        train_surv, valid_surv, test_surv, time_steps = load_dataset(root, cfg['exp_details']['dataset'])
 
-    _, results2 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race')
-    _, results = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='sex')
 
-    print(results)
-    results['Impurity_race'] = results2['Impurity_race']
-    results['CI_counts_race'] = results2['CI_counts_race']
-    with open(os.path.join(exp_path, 'results.yaml'), 'w') as f:
-        yaml.dump(results, f)
+        train_dataloader  = DataLoader(train_surv, batch_size=batch_size, shuffle=True, drop_last=True)
+        test_dataloader   = DataLoader(test_surv, batch_size=batch_size, shuffle=False)
 
-    print('C  :', results['C'])
-    print('IBS:', results['IBS'])
-    print('\nCI (sex):', results['Impurity_sex'])
-    print('Details:\n', results['CI_counts_sex'])
-    print('\nCI (race):', results2['Impurity_race'])
-    print('Details:\n', results2['CI_counts_race'])
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        device = cfg['primary_device']
+        print(f'\nUsing {device} device\n')
 
-    
+
+
+        method = cfg['train_params']['loss_fn']
+        method = 'RPS' if method in ['RPS_Ranking', 'NLL'] else method
+
+        model = load_pretrained_model(os.path.join(exp_path, 'best_model_C.pt'), 
+                                                out_dim=len(time_steps),
+                                                cfg=cfg)
+        model.eval()
+        model.to(device)
+
+        _, results2 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race', method=method)
+        _, results = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='sex', method=method)
+
+        results['Impurity_race'] = results2['Impurity_race']
+        results['CI_counts_race'] = results2['CI_counts_race']
+        with open(os.path.join(exp_path, 'results.yaml'), 'w') as f:
+            yaml.dump(results, f)
+
+        # print('C  :', results['C'])
+        # print('IBS:', results['IBS'])
+        # print('\nCI (sex):', results['Impurity_sex'])
+        # print('Details:\n', results['CI_counts_sex'])
+        # print('\nCI (race):', results2['Impurity_race'])
+        # print('Details:\n', results2['CI_counts_race'])
+
+        
 
 
