@@ -1,0 +1,170 @@
+import os
+import yaml
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
+from torch.utils.data import DataLoader
+
+from data import load_dataset
+from network import Network, MRIEncoder
+from train_test import test_step
+
+# This is the final version that I ended up making/using for analyzing the specific seeds/experiments you shared with me.
+
+# CONFIGURATION – change EXP_DIR for each experiment you analyze
+EXP_DIR = "NACC_DeepHit_Adam0.0001_67"   # folder with config.yaml, best_model_*.pt
+MODEL_FILENAME = "best_model_C.pt"  
+N_PERM_REPEATS = 10                  # number of random permutations per feature
+RESULTS_SUBDIR = "Feature_Importance_scores"  # created inside EXP_DIR - i.e., you'll find the results inside the experiment's folder
+
+
+def load_cfg_from_exp(exp_dir: str):
+    cfg_path = os.path.join(exp_dir, "config.yaml")
+    with open(cfg_path, "r") as f:
+        cfg = yaml.safe_load(f)
+    return cfg
+
+
+def build_model(cfg, time_steps, device):
+    dataset = cfg["exp_details"]["dataset"]
+    model = Network(
+        len(time_steps),
+        in_dim=cfg["model"]["in_dim"],
+        hid_dim=cfg["model"]["mlp_hid_dim"],
+        backbone=cfg["model"]["backbone"],
+    )
+    model.to(device)
+    return model
+
+
+def main():
+    cfg = load_cfg_from_exp(EXP_DIR)
+
+    root = cfg["exp_details"]["data_root"]
+    dataset_name = cfg["exp_details"]["dataset"]
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    batch_size = cfg["train_params"]["batch_size"]
+    paradigm = cfg["train_params"]["loss_fn"]   # e.g. "NLL", "RPS", "DeepHit", ...
+
+    if paradigm in ["NLL", "RPS", "RPS_Ranking"]:
+        metric_method = "PMF"          
+    elif paradigm == "DeepHit":
+        metric_method = "DeepHit"
+    elif paradigm == "MTLR":
+        metric_method = "MTLR"
+    elif paradigm == "Ranking":
+        metric_method = "distance"
+    else:
+        metric_method = paradigm    
+
+    print(f"Dataset: {dataset_name}")
+    print(f"Loss/paradigm: {paradigm}, metric method: {metric_method}")
+
+    train_surv, valid_surv, test_surv, time_steps = load_dataset(root, dataset_name)
+
+    test_loader = DataLoader(
+        test_surv,
+        batch_size=batch_size,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    model = build_model(cfg, time_steps, device)
+
+    ckpt_path = os.path.join(EXP_DIR, MODEL_FILENAME)
+    print(f"Loading model weights from: {ckpt_path}")
+    state_dict = torch.load(ckpt_path, map_location=device)
+    model.load_state_dict(state_dict)
+    model.eval()
+
+    print("Computing baseline performance on test set...") #just so you know when it gets to this point
+    _, base_results = test_step(
+        model,
+        test_loader,
+        loss_fn=None,
+        device=device,
+        time_step=time_steps,
+        method=metric_method,    
+    )
+    baseline_c = base_results["C"]
+    print(f"Baseline C-index: {baseline_c:.6f}")
+
+    df_test = test_surv.df.copy()
+
+    # Non-feature columns to drop
+    drop_cols = ["NACCID", "EVENT", "TIME_TO_EVENT", "TIME_TO_EVENT_DISCRETE"]
+    feature_cols = [c for c in df_test.columns if c not in drop_cols]
+
+    importances = []
+
+    out_dir = os.path.join(EXP_DIR, RESULTS_SUBDIR)
+    os.makedirs(out_dir, exist_ok=True)
+
+    for feat in feature_cols:
+        print(f"Permuting feature: {feat}")
+        orig_values = df_test[feat].values.copy()
+
+        drops = []
+        for _ in range(N_PERM_REPEATS):
+            # Permute this feature column
+            perm = np.random.permutation(orig_values)
+            df_test[feat] = perm
+            test_surv.df = df_test
+            # Evaluate C-index with this feature permuted
+            _, res_perm = test_step(
+                model,
+                test_loader,
+                loss_fn=None,
+                device=device,
+                time_step=time_steps,
+                method=metric_method,  
+            )
+            c_perm = res_perm["C"]
+            drops.append(baseline_c - c_perm)
+
+        df_test[feat] = orig_values
+        test_surv.df = df_test
+
+        mean_drop = float(np.mean(drops))
+        importances.append((feat, mean_drop))
+        print(f"  mean ΔC = {mean_drop:.6f}")
+
+    #Save results: ranked CSV + PNG -> sorts by importance (descending)
+    importances.sort(key=lambda x: x[1], reverse=True)
+    features = [f for f, _ in importances]
+    scores = [s for _, s in importances]
+    csv_path = os.path.join(out_dir, "feature_importances_single_seed_ranked.csv")
+    with open(csv_path, "w") as f:
+        f.write("# Baseline C-index: {:.6f}\n".format(baseline_c))
+        f.write("Feature,Importance\n")
+        for feat, imp in importances:
+            f.write(f"{feat},{imp:.6f}\n")
+
+    print(f"\nSaved ranked feature importances to:\n  {csv_path}")
+
+    # Plot top K features - currently have 20
+    K = min(20, len(features))
+    top_feats = features[:K]
+    top_scores = scores[:K]
+
+    y_pos = np.arange(K)
+
+    plt.figure(figsize=(10, 8))
+    plt.barh(y_pos, top_scores)
+    plt.yticks(y_pos, top_feats)
+    plt.xlabel("C-index drop (permutation importance)")
+    plt.title(f"Top {K} feature importances (seed {cfg['seed']}) NACC DeepHit Adam0")
+    plt.gca().invert_yaxis()
+    plt.tight_layout()
+
+    png_path = os.path.join(out_dir, f"feature_importances_single_seed_top{K} NACC DeepHit Adam0.png")
+    plt.savefig(png_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+    print(f"Saved top-{K} importance plot to:\n  {png_path}")
+
+
+if __name__ == "__main__":
+    main()
