@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from utils.survival_utils import get_metrics
+from utils.survival_utils import get_metrics, km_fair_calibration
 import torchvision.transforms as T
 import torchio.transforms as tio
 
@@ -53,6 +53,8 @@ def test_step(model, dataloader, loss_fn, device, time_step=None, method='DeepHi
 
         predictions += h.cpu().tolist()
 
+    # metrics = km_fair_calibration(predictions, times, events, groups)
+    # return metrics
     results = get_metrics(torch.tensor(predictions), time_step, times, events, method=method, sens_attribute=sens_attribute, groups=groups)
     return running_loss / len(dataloader), results
 

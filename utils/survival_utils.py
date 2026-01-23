@@ -7,6 +7,8 @@ from tqdm import tqdm
 from torch import nn
 from scipy.interpolate import interp1d
 from pycox.evaluation import EvalSurv
+from sksurv.nonparametric import kaplan_meier_estimator
+from lifelines import KaplanMeierFitter
 
 def cumsum_reverse(input: torch.Tensor, dim: int = 1) -> torch.Tensor:
     if dim != 1:
@@ -108,10 +110,86 @@ def concordance_impurity(predictions, times, events, group, concordance='hazard'
     impurity_score = max(deviations)
     return impurity_score, counter
 
+def boostrapped_km_cal(predictions, times, events, n_bootstrap=1000, method='DeepHit'):
+    rng = np.random.default_rng(67)
+    n = len(predictions)
+    bootstrap_values = []
+
+    kmf = KaplanMeierFitter()
+    kmf.fit(durations=times, event_observed=events, timeline=list(range(0, 10)))
+    g_km = torch.tensor(kmf.survival_function_['KM_estimate'])
+
+    for _ in tqdm(range(n_bootstrap), desc='Bootstrapping KM Cal', disable=True):
+        sample_indices = rng.choice(n, size=n, replace=True)
+        p = torch.tensor(predictions)[sample_indices]
+
+        survival_curves = get_survival_curves(p, method=method)
+        g_surv = survival_curves.mean(dim=0)
+        g_km_cal = ((g_km - g_surv) ** 2).mean()
+        bootstrap_values.append(g_km_cal)
+
+    return torch.tensor(bootstrap_values)
+
+
+
+def km_fair_calibration(predictions, times, events, group, method='DeepHit'):
+    # Construct group dictionary
+    # There's def a better way to do this
+    group_names = list(set(group))
+    if 'unknown' in group_names: group_names.remove('unknown')
+    if 'other' in group_names: group_names.remove('other')
+    
+    group_dict = {g: {
+        'predictions': [],
+        'times': [],
+        'events': [],
+        'KM_cal': -1
+    } for g in group_names}
+    
+
+    for p, t, e, g in zip(predictions, times, events, group):
+        if g in ['unknown', 'other']: continue
+        group_dict[g]['predictions'].append(p)
+        group_dict[g]['times'].append(t)
+        group_dict[g]['events'].append(e)
+
+
+    # Group-wise KM fair calibration
+    for g in sorted(group_names):
+
+        # kmf = KaplanMeierFitter()
+        # kmf.fit(durations=group_dict[g]['times'], event_observed=group_dict[g]['events'], timeline=list(range(0, 10)))
+        # g_km = torch.tensor(kmf.survival_function_['KM_estimate'])
+
+        # survival_curves = get_survival_curves(torch.tensor(group_dict[g]['predictions']), method=method)
+        # g_surv = survival_curves.mean(dim=0)
+
+        # # g_km_cal = ((g_km - g_surv) ** 2).mean()
+        # g_km_cal = ((g_km - g_surv) ** 2)
+        # group_dict[g]['KM_cal'] = g_km_cal
+        g_bootstrap_cal = boostrapped_km_cal(group_dict[g]['predictions'], group_dict[g]['times'], group_dict[g]['events'])
+        group_dict[g]['KM_cal'] = g_bootstrap_cal.tolist()
+
+    
+
+    return group_dict
+
+def km_cal(predictions, times, events, method='DeepHit'):
+    kmf = KaplanMeierFitter()
+    kmf.fit(durations=times, event_observed=events, timeline=list(range(0, 10)))
+    km = torch.tensor(kmf.survival_function_['KM_estimate'])
+
+    survival_curves = get_survival_curves(predictions, method=method)
+    avg_surv = survival_curves.mean(dim=0)
+
+    return ((km - avg_surv) ** 2).mean().item()
+
 
 def get_metrics(predictions, time_range, times, events, method='DeepHit', sens_attribute=None, groups=None):
     survival_curves = get_survival_curves(predictions, method=method)
     ev = EvalSurv(pd.DataFrame(survival_curves.T, time_range), np.array(times), np.array(events), censor_surv='km')
+    cal = km_cal(predictions, times, events)
+    fair_cal = km_fair_calibration(predictions.tolist(), times, events, groups, method=method)
     impurity = -1
     counts = {}
     ibs = float(ev.integrated_brier_score(time_range))
@@ -119,13 +197,16 @@ def get_metrics(predictions, time_range, times, events, method='DeepHit', sens_a
     if sens_attribute: 
         assert groups is not None, 'Parameter groups cannot be None when sens_attribute is defined!'
         impurity, counts = concordance_impurity(predictions, times, events, groups, concordance='td')
+        # impurity, counts = -1, -1
     
     
     results = {
         'C': ev.concordance_td('antolini'),
         'IBS': ibs,
+        'KM_Cal': cal,
         f'Impurity_{sens_attribute}': impurity,
-        f'CI_counts_{sens_attribute}': counts
+        f'CI_counts_{sens_attribute}': counts,
+        f'fair_cal_{sens_attribute}': fair_cal
     }
     
     return results

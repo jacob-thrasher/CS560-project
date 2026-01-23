@@ -57,7 +57,7 @@ def randomCrop(img, length, width, height):
 
 
 
-def load_dataset(root, dataset, n_bins=10, time_mode='discrete'):
+def load_dataset(root, dataset, n_bins=10, time_mode='discrete', drop_cols=[]):
     '''
     Loads and converts desired dataset to a survival dataset
 
@@ -71,9 +71,9 @@ def load_dataset(root, dataset, n_bins=10, time_mode='discrete'):
     '''
 
     if dataset == 'NACC':
-        train_surv = NACCDataset(os.path.join(root, 'train.csv'), time_mode=time_mode, name='NACC')
-        valid_surv = NACCDataset(os.path.join(root, 'valid.csv'), time_mode=time_mode, name='NACC')
-        test_surv = NACCDataset(os.path.join(root, 'test.csv')  , time_mode=time_mode, name='NACC')
+        train_surv = NACCDataset(os.path.join(root, 'train.csv'), time_mode=time_mode, name='NACC', drop_cols=drop_cols)
+        valid_surv = NACCDataset(os.path.join(root, 'valid.csv'), time_mode=time_mode, name='NACC', drop_cols=drop_cols)
+        test_surv = NACCDataset(os.path.join(root, 'test.csv')  , time_mode=time_mode, name='NACC', drop_cols=drop_cols)
         time_steps = np.arange(0, n_bins, 1)
  
     elif dataset in ['METABRIC', 'SUPPORT', 'GBSG', 'FLCHAIN']:
@@ -147,14 +147,19 @@ class PyCoxDataset(Dataset):
         return X, t, e, -1
 
 class NACCDataset(Dataset):
-    def __init__(self, df_path, time_mode='discrete', name="NACC"):
+    def __init__(self, df_path, time_mode='discrete', name="NACC", drop_cols=[], drop_sex=False, drop_race=False, drop_educ=False):
 
         assert time_mode in ['discrete', 'continuous'], f'Expected parameter time_mode to be one of [discrete, continuous], got {time_mode}'
 
         self.df = pd.read_csv(df_path)
+        if len(drop_cols) > 0:
+            self.df.drop(columns=drop_cols, inplace=True)
+
         self.time_mode = time_mode
         self.race_cols = [c for c in self.df.columns if "RACE" in c]
         self.name = name
+
+        self.drop_sex, self.drop_race, self.drop_educ = drop_sex, drop_race, drop_educ
 
     
     def __len__(self):
@@ -163,7 +168,13 @@ class NACCDataset(Dataset):
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
 
-        x = row.drop(['NACCID', 'EVENT', 'TIME_TO_EVENT', 'TIME_TO_EVENT_DISCRETE']).tolist()
+        cols_to_drop = ['NACCID', 'EVENT', 'TIME_TO_EVENT', 'TIME_TO_EVENT_DISCRETE']
+        if self.drop_sex: cols_to_drop.append('SEX')
+        if self.drop_race: cols_to_drop += self.race_cols
+        if self.drop_educ: cols_to_drop.append('EDUC')
+
+
+        x = row.drop(cols_to_drop).tolist()
         e = row['EVENT']
         if self.time_mode == 'discrete':
             t = row['TIME_TO_EVENT_DISCRETE']
@@ -187,10 +198,18 @@ class NACCDataset(Dataset):
             
 
         sex = 'male' if int(row['SEX']) == 0 else 'female'
+
+        # Education: 
+        educ = int(row['EDUC']*31)
+        if educ <= 12: educ = 'high_school'
+        elif educ <=16: educ = 'bachelors'
+        elif educ <= 18: educ = 'masters'
+        else: educ = 'doctoral'
         profile = {
             'naccid': row['NACCID'],
             'sex': sex,
-            'race': race
+            'race': race,
+            'educ': educ
         }
 
         return torch.tensor(x, dtype=torch.float32), t, e, profile

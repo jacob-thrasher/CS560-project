@@ -39,7 +39,7 @@ with open(os.path.join(out_dir, 'config.yaml'), 'w') as f:
 
 
 # Load data
-train_surv_ID, valid_surv_ID, test_surv_ID, time_steps = load_dataset(root, dataset)
+train_surv_ID, valid_surv_ID, test_surv_ID, time_steps = load_dataset(root, dataset, drop_cols=['DEMENTED', 'NORMCOG'])
 
 train_dataloader   = DataLoader(train_surv_ID, batch_size=batch_size, shuffle=True, drop_last=True)
 valid_dataloader   = DataLoader(valid_surv_ID, batch_size=batch_size, shuffle=False, drop_last=True)
@@ -47,10 +47,8 @@ test_dataloader    = DataLoader(test_surv_ID, batch_size=batch_size, shuffle=Fal
 
 
 # Load model
-if dataset == 'ADNI': 
-    model = MRIEncoder(in_channel=1, feat_dim=1024, out_dim=len(time_steps))
-else: 
-    model = Network(len(time_steps), in_dim=cfg['model']['in_dim'], hid_dim=cfg['model']['mlp_hid_dim'], backbone=cfg['model']['backbone'])
+in_feat = cfg['model']['in_dim'] - (cfg['data']['drop_sex'] + cfg['data']['drop_race'] + cfg['data']['drop_educ'])
+model = Network(len(time_steps), in_dim=in_feat, hid_dim=cfg['model']['mlp_hid_dim'], backbone=cfg['model']['backbone'])
 
 pretrained_path = cfg['model']['pretrained_path']
 if pretrained_path:
@@ -156,20 +154,27 @@ for epoch in tqdm(range(cfg['train_params']['epochs'])):
     plt.close()
 
 model.eval()   
-_, results2 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race')
-_, results = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='sex')
 
-print(results)
-results['Impurity_race'] = results2['Impurity_race']
+
+_, results  = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='sex' , method=paradigm)
+_, results2 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race', method=paradigm)
+_, results3 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='educ', method=paradigm)
+
+
+results['Impurity_race']  = results2['Impurity_race']
 results['CI_counts_race'] = results2['CI_counts_race']
+results['fair_cal_race']  = results2['fair_cal_race']
+results['Impurity_educ']  = results3['Impurity_educ']
+results['CI_counts_educ'] = results3['CI_counts_educ']
+results['fair_cal_educ']  = results3['fair_cal_educ']
 with open(os.path.join(out_dir, 'results.yaml'), 'w') as f:
     yaml.dump(results, f)
 
-print('C  :', results['C'])
-print('IBS:', results['IBS'])
-print('\nCI (sex):', results['Impurity_sex'])
-print('Details:\n', results['CI_counts_sex'])
-print('\nCI (race):', results2['Impurity_race'])
-print('Details:\n', results2['CI_counts_race'])
+# print('C  :', results['C'])
+# print('IBS:', results['IBS'])
+# print('\nCI (sex):', results['Impurity_sex'])
+# print('Details:\n', results['CI_counts_sex'])
+# print('\nCI (race):', results2['Impurity_race'])
+# print('Details:\n', results2['CI_counts_race'])
 
     
