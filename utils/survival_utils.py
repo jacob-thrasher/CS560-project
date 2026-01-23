@@ -67,7 +67,8 @@ def concordance_impurity(predictions, times, events, group, concordance='hazard'
                 r_i, r_j = predictions[i], predictions[j]
             elif concordance == 'td':
                 # Invert survival probabilities to align with hazard
-                r_i, r_j = 1 - predictions[i][t_i], 1 - predictions[j][t_i]
+                # r_i, r_j = 1 - predictions[i][t_i], 1 - predictions[j][t_i]
+                r_i, r_j = predictions[i][t_i], predictions[j][t_i]
 
             # Ensure i and j are comparable
             if not _is_comparable(t_i, t_j, e_i, e_j): continue
@@ -75,22 +76,23 @@ def concordance_impurity(predictions, times, events, group, concordance='hazard'
             counter[g_i]['num_comparable'] += 1
 
             # Evaluate concordance
-            if t_i < t_j:
-                if r_i > r_j: counter[g_i]['num_concordant'] += 1
-                elif r_i == r_j: counter[g_i]['num_concordant'] += 0.5
-            elif t_i > t_j:
-                if r_i < r_j: counter[g_i]['num_concordant'] += 1
-                elif r_i == r_j: counter[g_i]['num_concordant'] += 0.5
-            elif t_i == t_j:
-                if e_i == 1 and e_j == 1:
-                    if r_i == r_j: counter[g_i]['num_concordant'] += 1
-                    else: counter[g_i]['num_concordant'] += 0.5
-                elif e_i == 0 and e_j == 1 and r_i < r_j:
-                    counter[g_i]['num_concordant'] += 1
-                elif e_i == 1 and e_j == 0 and r_i > r_j:
-                    counter[g_i]['num_concordant'] += 1
-                else:
-                    counter[g_i]['num_concordant'] += 0.5
+            # if t_i < t_j:
+            #     if r_i > r_j: counter[g_i]['num_concordant'] += 1
+            #     elif r_i == r_j: counter[g_i]['num_concordant'] += 0.5
+            # elif t_i > t_j:
+            #     if r_i < r_j: counter[g_i]['num_concordant'] += 1
+            #     elif r_i == r_j: counter[g_i]['num_concordant'] += 0.5
+            # elif t_i == t_j:
+            #     if e_i == 1 and e_j == 1:
+            #         if r_i == r_j: counter[g_i]['num_concordant'] += 1
+            #         else: counter[g_i]['num_concordant'] += 0.5
+            #     elif e_i == 0 and e_j == 1 and r_i < r_j:
+            #         counter[g_i]['num_concordant'] += 1
+            #     elif e_i == 1 and e_j == 0 and r_i > r_j:
+            #         counter[g_i]['num_concordant'] += 1
+            #     else:
+            #         counter[g_i]['num_concordant'] += 0.5
+            if r_i < r_j: counter[g_i]['num_concordant'] += 1
 
     # Calculate concordance fraction (CF)
     for g in group_names:
