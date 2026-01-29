@@ -24,7 +24,7 @@ from network import load_pretrained_model
 if __name__ == '__main__':
 
 
-    exp_root = '/home/WVU-AD/jdt0025/Documents/exp/CHASE'
+    exp_root = '/home/WVU-AD/jdt0025/Documents/exp/CHASE/main'
     folders = sorted(os.listdir(exp_root))
     for i, exp in enumerate(folders):
         print(f'\n[{i} / {len(folders)}]: Evaluating model {exp}...\n')
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         results['Impurity_educ']  = results3['Impurity_educ']
         results['CI_counts_educ'] = results3['CI_counts_educ']
         results['fair_cal_educ']  = results3['fair_cal_educ']
-        with open(os.path.join(exp_path, 'results_educ.yaml'), 'w') as f:
+        with open(os.path.join(exp_path, 'results_fix.yaml'), 'w') as f:
             yaml.dump(results, f)
 
         # print('C  :', results['C'])
