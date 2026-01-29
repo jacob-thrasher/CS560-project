@@ -57,7 +57,7 @@ def randomCrop(img, length, width, height):
 
 
 
-def load_dataset(root, dataset, n_bins=10, time_mode='discrete', drop_cols=[]):
+def load_dataset(root, dataset, n_bins=10, time_mode='discrete', drop_cols=[], drop_sex=0, drop_race=0, drop_educ=0):
     '''
     Loads and converts desired dataset to a survival dataset
 
@@ -71,9 +71,9 @@ def load_dataset(root, dataset, n_bins=10, time_mode='discrete', drop_cols=[]):
     '''
 
     if dataset == 'NACC':
-        train_surv = NACCDataset(os.path.join(root, 'train.csv'), time_mode=time_mode, name='NACC', drop_cols=drop_cols)
-        valid_surv = NACCDataset(os.path.join(root, 'valid.csv'), time_mode=time_mode, name='NACC', drop_cols=drop_cols)
-        test_surv = NACCDataset(os.path.join(root, 'test.csv')  , time_mode=time_mode, name='NACC', drop_cols=drop_cols)
+        train_surv = NACCDataset(os.path.join(root, 'train.csv'), time_mode=time_mode, name='NACC', drop_cols=drop_cols, drop_sex=drop_sex, drop_race=drop_race, drop_educ=drop_educ)
+        valid_surv = NACCDataset(os.path.join(root, 'valid.csv'), time_mode=time_mode, name='NACC', drop_cols=drop_cols, drop_sex=drop_sex, drop_race=drop_race, drop_educ=drop_educ)
+        test_surv = NACCDataset(os.path.join(root, 'test.csv')  , time_mode=time_mode, name='NACC', drop_cols=drop_cols, drop_sex=drop_sex, drop_race=drop_race, drop_educ=drop_educ)
         time_steps = np.arange(0, n_bins, 1)
  
     elif dataset in ['METABRIC', 'SUPPORT', 'GBSG', 'FLCHAIN']:
@@ -147,7 +147,7 @@ class PyCoxDataset(Dataset):
         return X, t, e, -1
 
 class NACCDataset(Dataset):
-    def __init__(self, df_path, time_mode='discrete', name="NACC", drop_cols=[], drop_sex=False, drop_race=False, drop_educ=False):
+    def __init__(self, df_path, time_mode='discrete', name="NACC", drop_cols=[], drop_sex=0, drop_race=0, drop_educ=0):
 
         assert time_mode in ['discrete', 'continuous'], f'Expected parameter time_mode to be one of [discrete, continuous], got {time_mode}'
 
@@ -169,9 +169,9 @@ class NACCDataset(Dataset):
         row = self.df.iloc[idx]
 
         cols_to_drop = ['NACCID', 'EVENT', 'TIME_TO_EVENT', 'TIME_TO_EVENT_DISCRETE']
-        if self.drop_sex: cols_to_drop.append('SEX')
-        if self.drop_race: cols_to_drop += self.race_cols
-        if self.drop_educ: cols_to_drop.append('EDUC')
+        if self.drop_sex == 1: cols_to_drop.append('SEX')
+        if self.drop_race == 1: cols_to_drop += self.race_cols
+        if self.drop_educ == 1: cols_to_drop.append('EDUC')
 
 
         x = row.drop(cols_to_drop).tolist()

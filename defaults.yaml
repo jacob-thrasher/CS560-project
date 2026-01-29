@@ -12,7 +12,7 @@ data:
   drop_race: 0
   drop_educ: 0
 train_params:
-  epochs: 20
+  epochs: 20 #20
   checkpoint: 100
   batch_size: 128
   loss_fn: 'DeepHit'  # NLL, DeepHit, MLTR
