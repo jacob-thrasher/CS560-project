@@ -13,6 +13,7 @@ import yaml
 import csv
 import matplotlib.pyplot as plt
 from itertools import combinations
+from tqdm import tqdm
 
 def zero_case(n=20):
     # Event times strictly increasing
@@ -181,10 +182,10 @@ def half_case(n=20, seed=0):
 
 
 
-root = '/home/WVU-AD/jdt0025/Documents/exp/CHASE'
+root = '/home/WVU-AD/jdt0025/Documents/exp/CHASE/main'
 models = ['NLL', 'DeepHit', 'MTLR', 'RPS', 'RPS_Ranking']
 results = {}
-for model in models:
+for model in tqdm(models):
     C, IBS, KM_cal = [], [], []
     CI_sex, CI_race, CI_educ = [], [], []
     is_fair_cal_sex = []
@@ -192,7 +193,7 @@ for model in models:
     is_fair_cal_educ = {}
     for seed in [67, 68, 69]:
         model_path = os.path.join(root, f'NACC_{model}_Adam0.0001_{str(seed)}')
-        with open(os.path.join(model_path, 'results_educ.yaml'), 'r') as f:
+        with open(os.path.join(model_path, 'results_fix.yaml'), 'r') as f:
             metrics = yaml.safe_load(f)
         C.append(metrics['C'])
         IBS.append(metrics['IBS'])
@@ -235,28 +236,28 @@ for model in models:
 
     results[model] = {
         'C': {
-            'avg': float(np.mean(C)),
-            'std': float(np.std(C))
+            'avg': float(np.mean(C)) * 100,
+            'std': float(np.std(C)) * 100
         },
         'IBS': {
-            'avg': float(np.mean(IBS)),
-            'std': float(np.std(IBS))
+            'avg': float(np.mean(IBS)) * 100,
+            'std': float(np.std(IBS)) * 100
         },
         'KM_cal': {
             'avg': float(np.mean(KM_cal)),
             'std': float(np.std(KM_cal))
         },
         'CI_sex': {
-            'avg': float(np.mean(CI_sex)),
-            'std': float(np.std(CI_sex))
+            'avg': float(np.mean(CI_sex)) * 100,
+            'std': float(np.std(CI_sex)) * 100
         },
         'CI_race': {
-            'avg': float(np.mean(CI_race)),
-            'std': float(np.std(CI_race))
+            'avg': float(np.mean(CI_race)) * 100,
+            'std': float(np.std(CI_race)) * 100
         },
         'CI_educ': {
-            'avg': float(np.mean(CI_educ)),
-            'std': float(np.std(CI_educ))
+            'avg': float(np.mean(CI_educ)) * 100,
+            'std': float(np.std(CI_educ)) * 100
         },
         'km_fair_sex': float(np.mean(is_fair_cal_sex)),
         'km_fair_race': {},
@@ -267,7 +268,7 @@ for model in models:
     for key, value in is_fair_cal_educ.items():
         results[model]['km_fair_educ'][key] = np.mean(value)
 
-f = open('avg_results_new.csv', 'w')
+f = open('avg_results_fix.csv', 'w')
 writer = csv.writer(f)
 header = ['model', 'C', 'IBS', 'KM-cal', 'CI-td (sex)', 'CI-td (race)', 'CI-td (educ)', 'km-fair (sex)']
 km_fair_race = [key for key, _ in is_fair_cal_race.items()]
@@ -276,15 +277,16 @@ km_fair_educ = [key for key, _ in is_fair_cal_educ.items()]
 header += km_fair_educ
 writer.writerow(header)
 
+
 for model in models:
     row = [model, 
-           f"{results[model]['C']['avg']:0.4f} ({results[model]['C']['std']:0.3f})",
-           f"{results[model]['IBS']['avg']:0.4f} ({results[model]['IBS']['std']:0.3f})",
-           f"{results[model]['KM_cal']['avg']:0.4f} ({results[model]['KM_cal']['std']:0.3f})",
-           f"{results[model]['CI_sex']['avg']:0.4f} ({results[model]['CI_sex']['std']:0.3f})",
-           f"{results[model]['CI_race']['avg']:0.4f} ({results[model]['CI_race']['std']:0.3f})",
-           f"{results[model]['CI_educ']['avg']:0.4f} ({results[model]['CI_educ']['std']:0.3f})",
-           f"{results[model]['km_fair_sex']:0.4f}"]
+           f"{results[model]['C']['avg']:.2f} ({results[model]['C']['std']:.2f})",
+           f"{results[model]['IBS']['avg']:.2f} ({results[model]['IBS']['std']:.2f})",
+           f"{results[model]['KM_cal']['avg']:.2f} ({results[model]['KM_cal']['std']:.2f})",
+           f"{results[model]['CI_sex']['avg']:.2f} ({results[model]['CI_sex']['std']:.2f})",
+           f"{results[model]['CI_race']['avg']:.2f} ({results[model]['CI_race']['std']:.2f})",
+           f"{results[model]['CI_educ']['avg']:.2f} ({results[model]['CI_educ']['std']:.2f})",
+           f"{results[model]['km_fair_sex']:.2f}"]
     race_info = [f"{results[model]['km_fair_race'][key]:.4f}" for key in km_fair_race]
     row += race_info
     educ_info = [f"{results[model]['km_fair_educ'][key]:.4f}" for key in km_fair_educ]
