@@ -1,6 +1,9 @@
 *.csv
 *.csv#
 figures
+slurm
+slurm*
+defaults.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

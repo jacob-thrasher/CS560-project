@@ -27,8 +27,10 @@ batch_size = cfg['train_params']['batch_size']
 optim = cfg['optimizer']['optim']
 lr = cfg['optimizer']['lr']
 paradigm = cfg['train_params']['loss_fn']
+alt_id = cfg['exp_details']['exp_id']
 
 exp_id = f'{dataset}_{paradigm}_{optim}{lr}_{cfg["seed"]}'
+if alt_id: exp_id = f'{exp_id}_{alt_id}'
 out_dir = os.path.join(cfg['exp_details']['out_dir'], exp_id)
 if os.path.exists(out_dir):
     if not cfg['exp_details']['exist_ok']: raise OSError("Experiment exists!")
@@ -39,7 +41,8 @@ with open(os.path.join(out_dir, 'config.yaml'), 'w') as f:
 
 
 # Load data
-train_surv_ID, valid_surv_ID, test_surv_ID, time_steps = load_dataset(root, dataset, drop_cols=['DEMENTED', 'NORMCOG'])
+train_surv_ID, valid_surv_ID, test_surv_ID, time_steps = load_dataset(root, dataset, drop_cols=['DEMENTED', 'NORMCOG'],
+                                                                      drop_sex=cfg['data']['drop_sex'], drop_race=cfg['data']['drop_race'], drop_educ=cfg['data']['drop_educ'])
 
 train_dataloader   = DataLoader(train_surv_ID, batch_size=batch_size, shuffle=True, drop_last=True)
 valid_dataloader   = DataLoader(valid_surv_ID, batch_size=batch_size, shuffle=False, drop_last=True)
@@ -55,6 +58,7 @@ if pretrained_path:
     print(f"\nLoading pretrained model at {pretrained_path}")
     model.load_state_dict(torch.load(pretrained_path))
 
+print(torch.version.cuda, torch.cuda.is_available(), torch.cuda.device_count())
 model.to(device)
 
 
