@@ -1,0 +1,443 @@
+DeepHit:
+  C:
+    avg: 86.25734659768133
+    std: 0.106997938585292
+  CI_educ:
+    avg: 7.355554373609014
+    std: 0.7053914416441402
+  CI_race:
+    avg: 15.649227205288005
+    std: 4.602703489873137
+  CI_sex:
+    avg: 2.363528253426855
+    std: 0.44042384010056596
+  IBS:
+    avg: 9.435024136010144
+    std: 0.0736727809191652
+  KM_cal:
+    avg: 0.0017040303716145458
+    std: 0.00019145468105217193
+  km_fair_educ:
+    bachelors-doctoral: !!python/object/apply:numpy.core.multiarray.scalar
+    - &id001 !!python/object/apply:numpy.dtype
+      args:
+      - f8
+      - false
+      - true
+      state: !!python/tuple
+      - 3
+      - <
+      - null
+      - null
+      - null
+      - -1
+      - -1
+      - 0
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    doctoral-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    doctoral-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    high_school-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+  km_fair_race:
+    asian-black: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    asian-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    asian-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    asian-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    black-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV1b8=
+    native_american-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV1b8=
+    native_american-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    pacific_islander-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+  km_fair_sex: 0.3333333333333333
+MTLR:
+  C:
+    avg: 86.48383130462051
+    std: 0.1731245723364401
+  CI_educ:
+    avg: 4.899143872015401
+    std: 2.9460718418490437
+  CI_race:
+    avg: 23.92240671684446
+    std: 3.7194828628307466
+  CI_sex:
+    avg: 2.4741288697422354
+    std: 0.8519924059697143
+  IBS:
+    avg: 8.826135553778002
+    std: 0.06739842674579968
+  KM_cal:
+    avg: 0.010187316760810422
+    std: 0.0004238727514697678
+  km_fair_educ:
+    bachelors-doctoral: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    doctoral-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAAAAA=
+    doctoral-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV5T8=
+    high_school-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV1T8=
+  km_fair_race:
+    asian-black: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    asian-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV5b8=
+    asian-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    asian-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    black-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV1T8=
+    native_american-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    native_american-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    pacific_islander-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+  km_fair_sex: 0.3333333333333333
+NLL:
+  C:
+    avg: 86.449659228239
+    std: 0.07643973384482977
+  CI_educ:
+    avg: 7.031150124283819
+    std: 0.7457795771961271
+  CI_race:
+    avg: 15.202034669557051
+    std: 1.6787199408102078
+  CI_sex:
+    avg: 1.7489595067917085
+    std: 0.18981569833170112
+  IBS:
+    avg: 8.801162318541591
+    std: 0.038419205137984816
+  KM_cal:
+    avg: 0.0034547764946177527
+    std: 0.0001235467141569872
+  km_fair_educ:
+    bachelors-doctoral: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    doctoral-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    doctoral-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV5T8=
+    high_school-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+  km_fair_race:
+    asian-black: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAAAAA=
+    asian-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    asian-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    asian-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      VVVVVVVV5T8=
+    black-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    native_american-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAAAAA=
+    native_american-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    pacific_islander-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+  km_fair_sex: 0.0
+RPS:
+  C:
+    avg: 86.00759935939917
+    std: 0.025223010526401295
+  CI_educ:
+    avg: 9.642110892626969
+    std: 1.2017525637946642
+  CI_race:
+    avg: 13.601300944532943
+    std: 0.5965118842742936
+  CI_sex:
+    avg: 4.451348407062809
+    std: 0.3254086786898927
+  IBS:
+    avg: 9.236710577822143
+    std: 0.027339757936735265
+  KM_cal:
+    avg: 0.009595008449456507
+    std: 6.450467583746338e-05
+  km_fair_educ:
+    bachelors-doctoral: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    bachelors-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    doctoral-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    doctoral-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    high_school-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+  km_fair_race:
+    asian-black: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    asian-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAAAAA=
+    asian-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    asian-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    black-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    native_american-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    native_american-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    pacific_islander-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+  km_fair_sex: -1.0
+RPS_Ranking:
+  C:
+    avg: 86.02984111459824
+    std: 0.10372083007620765
+  CI_educ:
+    avg: 9.918530416950054
+    std: 1.2642384278184193
+  CI_race:
+    avg: 13.696420072830948
+    std: 1.1216282769760122
+  CI_sex:
+    avg: 4.483745056813273
+    std: 0.36812297186690623
+  IBS:
+    avg: 9.196450789064603
+    std: 0.02393549728917697
+  KM_cal:
+    avg: 0.009294078140169427
+    std: 0.00021884681433616656
+  km_fair_educ:
+    bachelors-doctoral: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    bachelors-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    bachelors-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    doctoral-high_school: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    doctoral-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    high_school-masters: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+  km_fair_race:
+    asian-black: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    asian-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAAAAA=
+    asian-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    asian-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    black-native_american: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    black-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    native_american-pacific_islander: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8L8=
+    native_american-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+    pacific_islander-white: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+  km_fair_sex: -1.0

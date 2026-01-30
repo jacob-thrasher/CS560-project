@@ -182,8 +182,10 @@ def half_case(n=20, seed=0):
 
 
 
-root = '/home/WVU-AD/jdt0025/Documents/exp/CHASE/main'
+# root = '/home/WVU-AD/jdt0025/Documents/exp/CHASE/main'
+root = '/users/jdt0025/scratch/exp/CHASE/'
 models = ['NLL', 'DeepHit', 'MTLR', 'RPS', 'RPS_Ranking']
+alt_id = 'drop-educ'
 results = {}
 for model in tqdm(models):
     C, IBS, KM_cal = [], [], []
@@ -192,8 +194,8 @@ for model in tqdm(models):
     is_fair_cal_race = {}
     is_fair_cal_educ = {}
     for seed in [67, 68, 69]:
-        model_path = os.path.join(root, f'NACC_{model}_Adam0.0001_{str(seed)}')
-        with open(os.path.join(model_path, 'results_fix.yaml'), 'r') as f:
+        model_path = os.path.join(root, f'NACC_{model}_Adam0.0001_{str(seed)}_{alt_id}')
+        with open(os.path.join(model_path, 'results.yaml'), 'r') as f:
             metrics = yaml.safe_load(f)
         C.append(metrics['C'])
         IBS.append(metrics['IBS'])
@@ -268,7 +270,7 @@ for model in tqdm(models):
     for key, value in is_fair_cal_educ.items():
         results[model]['km_fair_educ'][key] = np.mean(value)
 
-f = open('avg_results_fix.csv', 'w')
+f = open(f'avg_results_{alt_id}.csv', 'w')
 writer = csv.writer(f)
 header = ['model', 'C', 'IBS', 'KM-cal', 'CI-td (sex)', 'CI-td (race)', 'CI-td (educ)', 'km-fair (sex)']
 km_fair_race = [key for key, _ in is_fair_cal_race.items()]
@@ -295,7 +297,7 @@ for model in models:
 
     writer.writerow(row)
 
-with open('avg_results.yaml', 'w') as f:
+with open(f'avg_results_{alt_id}.yaml', 'w') as f:
     yaml.dump(results, f)
 
 

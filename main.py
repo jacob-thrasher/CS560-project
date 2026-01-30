@@ -50,7 +50,12 @@ test_dataloader    = DataLoader(test_surv_ID, batch_size=batch_size, shuffle=Fal
 
 
 # Load model
-in_feat = cfg['model']['in_dim'] - (cfg['data']['drop_sex'] + cfg['data']['drop_race'] + cfg['data']['drop_educ'])
+if cfg['data']['drop_sex'] + cfg['data']['drop_educ'] > 0:
+    in_feat = cfg['model']['in_dim'] - 1
+elif cfg['data']['drop_race'] == 1:
+    in_feat = cfg['model']['in_dim'] - len(train_surv_ID.race_cols)
+else: 
+    in_feat = cfg['model']['in_dim']
 model = Network(len(time_steps), in_dim=in_feat, hid_dim=cfg['model']['mlp_hid_dim'], backbone=cfg['model']['backbone'])
 
 pretrained_path = cfg['model']['pretrained_path']
