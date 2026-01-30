@@ -69,20 +69,6 @@ if __name__ == '__main__':
         _, results2 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race', method=method)
         _, results3 = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='educ', method=method)
 
-        # metrics = test_step(model, test_dataloader, loss_fn=None, device=device, time_step=time_steps, sens_attribute='race', method=method)
-
-        
-        # metrics = results2['fair_cal_educ']
-        # pairs = list(combinations(metrics.keys(), 2))
-        # for pair in pairs:
-            
-        #     diff_boot = metrics[pair[0]]['KM_cal'] - metrics[pair[1]]['KM_cal']
-        #     ci_diff = np.percentile(diff_boot, [2.5, 97.5])
-
-        #     print(pair, ci_diff)
-
-        # print(results2['KM_Cal'])
-
         # raise ValueError
 
         results['Impurity_race']  = results2['Impurity_race']
@@ -91,7 +77,7 @@ if __name__ == '__main__':
         results['Impurity_educ']  = results3['Impurity_educ']
         results['CI_counts_educ'] = results3['CI_counts_educ']
         results['fair_cal_educ']  = results3['fair_cal_educ']
-        with open(os.path.join(exp_path, 'results_fix.yaml'), 'w') as f:
+        with open(os.path.join(exp_path, 'results_test.yaml'), 'w') as f:
             yaml.dump(results, f)
 
         # print('C  :', results['C'])

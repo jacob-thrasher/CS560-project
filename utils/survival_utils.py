@@ -127,7 +127,8 @@ def boostrapped_km_cal(predictions, times, events, n_bootstrap=1000, method='Dee
 
         survival_curves = get_survival_curves(p, method=method)
         g_surv = survival_curves.mean(dim=0)
-        g_km_cal = ((g_km - g_surv) ** 2).mean()
+        # g_km_cal = ((g_km - g_surv) ** 2).mean()
+        g_km_cal = -torch.nn.functional.kl_div(g_surv, g_km, reduction='batchmean')
         bootstrap_values.append(g_km_cal)
 
     return torch.tensor(bootstrap_values)
@@ -184,7 +185,19 @@ def km_cal(predictions, times, events, method='DeepHit'):
     survival_curves = get_survival_curves(predictions, method=method)
     avg_surv = survival_curves.mean(dim=0)
 
-    return ((km - avg_surv) ** 2).mean().item()
+    # plt.step(list(range(len(km))), km, label='KM', color='red', where='post')
+    # plt.step(list(range(len(km))), avg_surv, label='Avg pred', color='blue', where='post')
+
+    # for i in range(5):
+    #     plt.step(list(range(len(km))), survival_curves[i], alpha=0.5, color='grey', where='post', linestyle='dashed')
+    # mse = ((km - avg_surv) ** 2).mean().item()
+    # plt.title(mse)
+    # plt.legend()
+    # plt.show()
+
+    # return ((km - avg_surv) ** 2).mean().item()
+    kl = torch.nn.functional.kl_div(avg_surv, km, reduction='batchmean')
+    return kl
 
 
 def get_metrics(predictions, time_range, times, events, method='DeepHit', sens_attribute=None, groups=None):
@@ -198,8 +211,8 @@ def get_metrics(predictions, time_range, times, events, method='DeepHit', sens_a
 
     if sens_attribute: 
         assert groups is not None, 'Parameter groups cannot be None when sens_attribute is defined!'
-        impurity, counts = concordance_impurity(predictions, times, events, groups, concordance='td')
-        # impurity, counts = -1, -1
+        # impurity, counts = concordance_impurity(predictions, times, events, groups, concordance='td')
+        impurity, counts = -1, -1
     
     
     results = {
