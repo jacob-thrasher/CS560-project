@@ -282,7 +282,7 @@ for model in models:
     row = [model, 
            f"{results[model]['C']['avg']:.2f} ({results[model]['C']['std']:.2f})",
            f"{results[model]['IBS']['avg']:.2f} ({results[model]['IBS']['std']:.2f})",
-           f"{results[model]['KM_cal']['avg']:.2f} ({results[model]['KM_cal']['std']:.2f})",
+           f"{results[model]['KM_cal']['avg']:.4f} ({results[model]['KM_cal']['std']:.4f})",
            f"{results[model]['CI_sex']['avg']:.2f} ({results[model]['CI_sex']['std']:.2f})",
            f"{results[model]['CI_race']['avg']:.2f} ({results[model]['CI_race']['std']:.2f})",
            f"{results[model]['CI_educ']['avg']:.2f} ({results[model]['CI_educ']['std']:.2f})",
